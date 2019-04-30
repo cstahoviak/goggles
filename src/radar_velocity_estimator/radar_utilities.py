@@ -11,7 +11,7 @@ import rospy
 import numpy as np
 from functools import reduce
 
-class RadarUtilities():
+class RadarUtilities:
 
     def __init__(self):
         pass
@@ -29,7 +29,7 @@ class RadarUtilities():
         ## Indexing in Python example
         ## print("Values bigger than 10 =", x[x>10])
         ## print("Their indices are ", np.nonzero(x > 10))
-        idx_angle = np.nonzero(np.absolute(np.rad2deg(radar_azimuth)) < azimuth_thres);
+        idx_angle = np.nonzero(np.abs(np.rad2deg(radar_azimuth)) < azimuth_thres);
         idx_intensity = np.nonzero(radar_intensity > intensity_thres);
         idx_range = np.nonzero(radar_range > range_thres);
 
@@ -47,12 +47,11 @@ class RadarUtilities():
         begin_idx = 0;
 
         for i in range(azimuth_bins.shape[0]):
-            if np.absolute(current_bin - azimuth_bins[i]) > bin_thres:
+            if np.abs(current_bin - azimuth_bins[i]) > bin_thres:
                 ## update location of last angle to be averaged
                 end_idx = i-1;
 
                 ## add single averaged value to table
-                # print(begin_idx, end_idx)
                 azimuth_bin = np.mean(azimuth_bins[begin_idx:end_idx]);
                 bins.append(azimuth_bin)
 

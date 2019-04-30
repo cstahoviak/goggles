@@ -85,6 +85,8 @@ return bestfit
         test_points = data[test_idxs]
         maybemodel = model.fit(maybeinliers)
         test_err = model.get_error( test_points, maybemodel)
+        # print "(ransac) test_err.shape = " + str(test_err.shape)
+        # print "(ransac) test_idxs.shape = " + str(test_idxs.shape)
         also_idxs = test_idxs[test_err < t] # select indices of rows with accepted points
         alsoinliers = data[also_idxs,:]
         if debug:
@@ -139,8 +141,8 @@ class LinearLeastSquaresModel:
         B = numpy.vstack([data[:,i] for i in self.output_columns]).T
         B_fit = scipy.dot(A,model)
         err_per_point = numpy.sum((B-B_fit)**2,axis=1) # sum squared error per row
-        print(err_per_point)
-        print("\n")
+        # print(err_per_point)
+        # print("\n")
         return err_per_point
 
 def test():
@@ -171,6 +173,7 @@ def test():
     # setup model
 
     all_data = numpy.hstack( (A_noisy,B_noisy) )
+    print "(ransac) all_data.shape = " + str(all_data.shape)
     input_columns = range(n_inputs) # the first columns of the array
     output_columns = [n_inputs+i for i in range(n_outputs)] # the last columns of the array
     debug = False
@@ -181,7 +184,7 @@ def test():
 
     # run RANSAC algorithm
     ransac_fit, ransac_data = ransac(all_data,model,
-                                     50, 1000, 7e3, 300, # misc. parameters
+                                     40, 1000, 7e3, 300, # misc. parameters
                                      debug=debug,return_all=True)
     if 1:
         import pylab
