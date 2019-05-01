@@ -22,19 +22,16 @@ class RadarDopplerModel2D:
         self.maxDistance   = 0.1    # a threshold value for determining when a data point fits a model
         self.minPts        = 2      # the number of close data values required to assert that a model fits well to data
 
-    # defined for RANSAC
+    # defined for RANSAC - not used
     def fit(self, data):
         radar_doppler = data[:,0]   # [m/s]
         radar_azimuth = data[:,1]   # [rad]
 
         model = self.doppler2BodyFrameVelocity(radar_doppler, radar_azimuth)
-        # rospy.loginfo("(ransac_fit) type(model) = " + str(type(model)))
-        # rospy.loginfo("(ransac_fit) model.shape = " + str(model.shape))
-        # rospy.loginfo("(ransac_fit) model = " + str(model))
         return model
 
 
-    # defined for RANSAC
+    # defined for RANSAC - not used
     def get_error(self, data, model):
         ## number of targets in scan
         Ntargets = data.shape[0]
@@ -54,17 +51,12 @@ class RadarDopplerModel2D:
             error[i] = np.sqrt((doppler_predicted[i] - radar_doppler[i])**2)
 
         ## error per data point (column vector)
-        # rospy.loginfo("(get_error) error.shape = " + str(error.shape))
-        # rospy.loginfo("error = " + str(error))
         return error
         # return np.squeeze(error)
 
 
     # inverse measurement model: measurements->model
     def doppler2BodyFrameVelocity(self, radar_doppler, radar_azimuth):
-        # rospy.loginfo("doppler2BodyFrameVelocity: radar_azimuth.shape = " + str(radar_azimuth.shape))
-        # rospy.loginfo("doppler2BodyFrameVelocity: radar_doppler.shape = " + str(radar_doppler.shape))
-
         numAzimuthBins = self.utils.getNumAzimuthBins(radar_azimuth)
 
         if numAzimuthBins > 1:
@@ -84,7 +76,6 @@ class RadarDopplerModel2D:
 
     # measurement generative (forward) model: model->measurements
     def simulateRadarDoppler(self, model, radar_azimuth, eps, delta):
-        # print("simulateRadarDoppler: radar_azimuth.shape = " + str(radar_azimuth.shape))
         Ntargets = radar_azimuth.shape[0]
         radar_doppler = np.zeros((Ntargets,), dtype=float)
 

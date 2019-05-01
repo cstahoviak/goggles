@@ -96,9 +96,6 @@ class VelocityEstimator():
         self.angle_thres     = rospy.get_param('~angle_thres')
         self.range_thres     = rospy.get_param('~range_thres')
         self.intensity_thres = rospy.get_param('~intensity_thres')
-        # self.angle_thres     = 90
-        # self.range_thres     = 0.30
-        # self.intensity_thres = 5
         self.thresholds      = np.array([self.angle_thres, self.intensity_thres, self.range_thres])
 
         rospy.loginfo("INIT: " + ns + mmwave_topic + " angle_thres = " + str(self.angle_thres))

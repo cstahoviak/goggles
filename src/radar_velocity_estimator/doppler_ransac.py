@@ -25,14 +25,8 @@ class dopplerRANSAC(BaseEstimator, RegressorMixin):
 
     # fit(X,y): Fit model to given training data and target values
     def fit(self, X, y):
-        # rospy.loginfo("fit: X.shape = " + str(X.shape))
-        # rospy.loginfo("fit: y.shape = " + str(y.shape))
-
         radar_azimuth = np.squeeze(X)
         radar_doppler = np.squeeze(y)
-
-        # rospy.loginfo("fit: radar_azimuth.shape = " + str(radar_azimuth.shape))
-        # rospy.loginfo("fit: radar_doppler.shape = " + str(radar_doppler.shape))
 
         model = self.model.doppler2BodyFrameVelocity(radar_doppler, radar_azimuth)
         # rospy.loginfo("fit: model = " + str(model))
@@ -41,7 +35,6 @@ class dopplerRANSAC(BaseEstimator, RegressorMixin):
 
     # predict(X): Returns predicted values used to compute residual error using loss function
     def predict(self, X):
-        # rospy.loginfo("predict: X.shape = " + str(X.shape))
         radar_azimuth = np.squeeze(X)
         Ntargets = radar_azimuth.shape[0]
 
@@ -53,10 +46,6 @@ class dopplerRANSAC(BaseEstimator, RegressorMixin):
         return doppler_predicted
 
     def loss(self, y, y_pred):
-        # rospy.loginfo("loss: y.shape = " + str(y.shape))
-        # rospy.loginfo("loss: y_pred.shape = " + str(y_pred.shape))
-
-        # dist = np.sqrt(np.square(radar_doppler - doppler_predicted))
         dist = np.sqrt(np.square(np.squeeze(y) - y_pred))
         # rospy.loginfo("loss: dist.shape = " + str(dist.shape))
         return dist

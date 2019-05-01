@@ -155,7 +155,7 @@ def test_odr():
     # velocity = (max_vel-min_vel).*rand(2,1) + min_vel
 
     # create noisy simulated radar measurements
-    radar_azimuth_bins = np.genfromtxt('1642_azimuth_bins.csv', delimiter=',')
+    radar_azimuth_bins = np.genfromtxt('../../data/1642_azimuth_bins.csv', delimiter=',')
     true_azimuth, true_doppler, radar_azimuth, radar_doppler = \
         odr.model.getSimulatedRadarMeasurements(Ntargets, velocity, \
             radar_azimuth_bins, odr.sigma_vr, debug=odr.debug)
