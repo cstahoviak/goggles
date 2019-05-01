@@ -38,14 +38,14 @@ class RadarDopplerModel2D:
     def get_error(self, data, model):
         ## number of targets in scan
         Ntargets = data.shape[0]
-        error = np.zeros((Ntargets,1), dtype=float)
+        error = np.zeros((Ntargets,), dtype=float)
 
         radar_doppler = data[:,0]   # [m/s]
         radar_azimuth = data[:,1]   # [rad]
 
         ## do NOT corrupt measurements with noise
-        eps = np.zeros((Ntargets,1), dtype=float)
-        delta = np.zeros((Ntargets,1), dtype=float)
+        eps = np.zeros((Ntargets,), dtype=float)
+        delta = np.zeros((Ntargets,), dtype=float)
 
         ## radar doppler generative model
         doppler_predicted = self.simulateRadarDoppler(model, radar_azimuth, eps, delta)
@@ -56,11 +56,15 @@ class RadarDopplerModel2D:
         ## error per data point (column vector)
         # rospy.loginfo("(get_error) error.shape = " + str(error.shape))
         # rospy.loginfo("error = " + str(error))
-        return np.squeeze(error)
+        return error
+        # return np.squeeze(error)
 
 
     # inverse measurement model: measurements->model
     def doppler2BodyFrameVelocity(self, radar_doppler, radar_azimuth):
+        # rospy.loginfo("doppler2BodyFrameVelocity: radar_azimuth.shape = " + str(radar_azimuth.shape))
+        # rospy.loginfo("doppler2BodyFrameVelocity: radar_doppler.shape = " + str(radar_doppler.shape))
+
         numAzimuthBins = self.utils.getNumAzimuthBins(radar_azimuth)
 
         if numAzimuthBins > 1:
@@ -88,10 +92,8 @@ class RadarDopplerModel2D:
             ## add measurement noise distributed as N(0,sigma_theta_i)
             theta = radar_azimuth[i] + delta[i]
 
-            radar_doppler[i] = model[0]*np.cos(theta) + model[1]*np.sin(theta)
-
-            ## add meaurement noise distributed as N(0,sigma_vr)
-            radar_doppler[i] = radar_doppler[i] + eps[i]
+            ## add meaurement noise epsilon distributed as N(0,sigma_vr)
+            radar_doppler[i] = model[0]*np.cos(theta) + model[1]*np.sin(theta) + eps[i]
 
         return radar_doppler
 
@@ -182,7 +184,8 @@ class RadarDopplerModel2D:
         return model, v_hat_all
 
     def getSimulatedRadarMeasurements(self, Ntargets, model, radar_azimuth_bins, \
-                                      sigma_vr, debug=False):
+                                        sigma_vr, debug=False):
+
         radar_azimuth = np.zeros((Ntargets,), dtype=float)
 
         # simulated true target angles

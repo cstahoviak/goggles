@@ -44,7 +44,7 @@ class OrthogonalDistanceRegression2D:
         delta = delta0
         s = np.ones((p,), dtype=float)
 
-        k = 0
+        iter = 0
         while (np.abs(s[0]) > self.converge_thres) or (np.abs(s[1]) > self.converge_thres):
             # get Jacobian matrices
             G, V, D = self.getJacobian(radar_azimuth, delta, beta, weights, d)
@@ -63,8 +63,8 @@ class OrthogonalDistanceRegression2D:
             f = lambda param: self.objectiveFunc(param,G,V,D,P,eps,delta)
 
             soln = minimize(f,s)
-            s = soln.x
             # print("soln =\n" + str(soln))
+            s = soln.x
             t = np.matmul(-np.linalg.inv(P), np.matmul(V.conj().T,eps) + \
                     np.matmul(D,delta) + np.matmul(np.matmul(V.conj().T,G),s))
 
@@ -74,8 +74,8 @@ class OrthogonalDistanceRegression2D:
 
             # rospy.loginfo("[k, s] = " + str(np.array([[k, s[0], s[1]]]) ) )
 
-            k+=1
-            if k > self.maxIterations:
+            iter+=1
+            if iter > self.maxIterations:
                 break
 
         model = beta
