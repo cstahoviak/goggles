@@ -1,6 +1,8 @@
 # goggles
 A radar-based 3D linear velocity estimation ROS package
 
+<img src="radar_odom.png" width="934"/>
+
 Goggles estimates the 2D or 3D body-frame linear velocity vector of a sensor platfrom given input data from a single
 [TI mmWave Series](http://www.ti.com/sensors/mmwave/overview.html) radar (`/mmWaveDataHdl/RScan` topic). The velocity
 estimation scheme takes the following approach:
