@@ -7,20 +7,25 @@ Description:
 
 """
 
+from __future__ import division
 import rospy
 import numpy as np
-from radar_velocity_estimator.radar_utilities import RadarUtilities
+from goggles.radar_utilities import RadarUtilities
 
 class RadarDopplerModel2D:
 
     def __init__(self):
         self.utils = RadarUtilities()
 
-        ## define RANSAC parameters
-        self.sampleSize    = 2      # the minimum number of data values required to fit the model
-        self.maxIterations = 1000   # the maximum number of iterations allowed in the algorithm
-        self.maxDistance   = 0.1    # a threshold value for determining when a data point fits a model
-        self.minPts        = 2      # the number of close data values required to assert that a model fits well to data
+        ## define radar uncertainty parameters
+        self.sigma_vr = 0.044               # [m/s]
+        self.sigma_theta = 0.0426           # [rad]
+        self.sigma = self.sigma_theta
+
+        ## define ODR error variance ratio
+        self.d = self.sigma_vr / self.sigma_theta
+
+        self.min_pts = 2    # minimum number of data points to fit the model of close data values required to assert that a model fits well to data
 
     # defined for RANSAC - not used
     def fit(self, data):
@@ -35,14 +40,14 @@ class RadarDopplerModel2D:
     def get_error(self, data, model):
         ## number of targets in scan
         Ntargets = data.shape[0]
-        error = np.zeros((Ntargets,), dtype=float)
+        error = np.zeros((Ntargets,), dtype=np.float32)
 
         radar_doppler = data[:,0]   # [m/s]
         radar_azimuth = data[:,1]   # [rad]
 
         ## do NOT corrupt measurements with noise
-        eps = np.zeros((Ntargets,), dtype=float)
-        delta = np.zeros((Ntargets,), dtype=float)
+        eps = np.zeros((Ntargets,), dtype=np.float32)
+        delta = np.zeros((Ntargets,), dtype=np.float32)
 
         ## radar doppler generative model
         doppler_predicted = self.simulateRadarDoppler(model, radar_azimuth, eps, delta)
@@ -56,8 +61,15 @@ class RadarDopplerModel2D:
 
 
     # inverse measurement model: measurements->model
-    def doppler2BodyFrameVelocity(self, radar_doppler, radar_azimuth):
+    def doppler2BodyFrameVelocity(self, data):
+        radar_doppler = data[:,0]       # doppler velocity [m/s]
+        radar_azimuth = data[:,1]       # azimuth angle column vector [rad]
+
         numAzimuthBins = self.utils.getNumAzimuthBins(radar_azimuth)
+
+        # rospy.loginfo("doppler2BodyFrameVelocity: numAzimuthBins = %d", numAzimuthBins)
+        # rospy.loginfo(['{0:5.4f}'.format(i) for i in radar_azimuth])    # 'list comprehension'
+        # # rospy.loginfo(['{0:5.4f}'.format(i) for i in radar_doppler])    # 'list comprehension'
 
         if numAzimuthBins > 1:
            ## solve uniquely-determined problem for pair of targets (i,j)
@@ -67,17 +79,19 @@ class RadarDopplerModel2D:
             b = np.array([[radar_doppler[0]], \
                           [radar_doppler[1]]])
 
-            model = np.linalg.solve(M,b)
+            model = np.squeeze(np.linalg.solve(M,b))
         else:
-            model = float('nan')*np.ones((2,1))
+            model = float('nan')*np.ones((2,))
 
         return model
 
 
     # measurement generative (forward) model: model->measurements
-    def simulateRadarDoppler(self, model, radar_azimuth, eps, delta):
-        Ntargets = radar_azimuth.shape[0]
-        radar_doppler = np.zeros((Ntargets,), dtype=float)
+    def simulateRadarDoppler(self, model, data, eps, delta):
+        Ntargets = data.shape[0]
+        radar_doppler = np.zeros((Ntargets,), dtype=np.float32)
+
+        radar_azimuth = data[:,0]
 
         for i in range(Ntargets):
             ## add measurement noise distributed as N(0,sigma_theta_i)
@@ -96,7 +110,7 @@ class RadarDopplerModel2D:
 
         if Ntargets > 1:
             ## initialize velocity estimate vector
-            v_hat = np.zeros((2,iter), dtype=float)
+            v_hat = np.zeros((2,iter), dtype=np.float32)
 
             k = 0
             for i in range(Ntargets-1):
@@ -119,13 +133,13 @@ class RadarDopplerModel2D:
                 ## problem for any two targets in the scan. This is the result of M
                 ## being close to singular for all pairs of targets, i.e. the
                 ## targets have identical angular locations.
-                v_hat_all = float('nan')*np.ones((2,1))
+                v_hat_all = float('nan')*np.ones((2,))
 
         else:
             ## cannot solve uniquely-determined problem for a single target
             ## (solution requires 2 non-identical targets)
             v_hat_nonNaN = []
-            v_hat_all = float('nan')*np.ones((2,1))
+            v_hat_all = float('nan')*np.ones((2,))
 
         if ( Ntargets > 2 ) and ( v_hat_nonNaN.shape[1] > 0 ):
             ## if there are more than 2 targets in the scan (resulting in a minimum
@@ -164,20 +178,20 @@ class RadarDopplerModel2D:
             # there are 2 targets in the scan, AND their solution to the
             # uniquely-determined problem produced a singular matrix M, i.e. the
             # targets have identical angular locations.
-            model = float('nan')*np.ones((2,1))
-            v_hat_all = float('nan')*np.ones((2,1))
+            model = float('nan')*np.ones((2,))
+            v_hat_all = float('nan')*np.ones((2,))
 
         else:
             # there is a single target in the scan, and the solution to the
             # uniquely-determined problem is not possible
-            model = float('nan')*np.ones((2,1))
+            model = float('nan')*np.ones((2,))
 
         return model, v_hat_all
 
     def getSimulatedRadarMeasurements(self, Ntargets, model, radar_azimuth_bins, \
                                         sigma_vr, debug=False):
 
-        radar_azimuth = np.zeros((Ntargets,), dtype=float)
+        radar_azimuth = np.zeros((Ntargets,), dtype=np.float32)
 
         # simulated true target angles
         min_azimuth = np.deg2rad(-75)   # [rad]
@@ -193,18 +207,24 @@ class RadarDopplerModel2D:
             ## could Additionally add some noise here
             radar_azimuth[i] = radar_azimuth_bins[bin_idx]
 
+        true_elevation = np.zeros((Ntargets,))
+        radar_elevation = np.zeros((Ntargets,))
+
         ## define AGWN vector for doppler velocity measurements
         if debug:
-            eps = np.ones((Ntargets,), dtype=float)*sigma_vr
+            eps = np.ones((Ntargets,), dtype=np.float32)*sigma_vr
         else:
             eps = np.random.normal(0,sigma_vr,(Ntargets,))
 
         ## get true radar doppler measurements
-        true_doppler = self.simulateRadarDoppler(model, true_azimuth, \
-            np.zeros((Ntargets,), dtype=float), np.zeros((Ntargets,), dtype=float))
+        true_doppler = self.simulateRadarDoppler(model, np.column_stack((true_azimuth,true_elevation)), \
+            np.zeros((Ntargets,), dtype=np.float32), np.zeros((Ntargets,), dtype=np.float32))
 
         # get noisy radar doppler measurements
-        radar_doppler =  self.simulateRadarDoppler(model, radar_azimuth, \
-            eps, np.zeros((Ntargets,), dtype=float))
+        radar_doppler =  self.simulateRadarDoppler(model, np.column_stack((radar_azimuth,radar_elevation)), \
+            eps, np.zeros((Ntargets,), dtype=np.float32))
 
-        return true_azimuth, true_doppler, radar_azimuth, radar_doppler
+        data_truth = np.column_stack((true_doppler,true_azimuth,true_elevation))
+        data_sim = np.column_stack((radar_doppler,radar_azimuth,radar_elevation))
+
+        return data_truth, data_sim

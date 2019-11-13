@@ -11,7 +11,7 @@ Base Estimator class for RANSAC Regression.
 import rospy
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
-from radar_velocity_estimator.radar_utilities import RadarUtilities
+from goggles.radar_utilities import RadarUtilities
 
 class dopplerRANSAC(BaseEstimator, RegressorMixin):
 
@@ -19,6 +19,10 @@ class dopplerRANSAC(BaseEstimator, RegressorMixin):
         # ascribe doppler velocity model (2D, 3D) to the class
         self.model = model
         self.utils = RadarUtilities()
+
+        self.sample_size    = self.model.min_pts     # the minimum number of data values required to fit the model
+        self.max_iterations = 25    # the maximum number of iterations allowed in the algorithm
+        self.max_distance   = 0.15  # a threshold value for determining when a data point fits a model
 
         # body-frame velocity vector - to be estimated by RANSAC
         self.param_vec_ = None
@@ -28,6 +32,7 @@ class dopplerRANSAC(BaseEstimator, RegressorMixin):
         radar_azimuth = np.squeeze(X)
         radar_doppler = np.squeeze(y)
 
+        rospy.loginfo("base_estimator.fit: sample size = " + str(radar_doppler.shape[0]))
         model = self.model.doppler2BodyFrameVelocity(radar_doppler, radar_azimuth)
         # rospy.loginfo("fit: model = " + str(model))
         self.param_vec_ = model
@@ -39,8 +44,8 @@ class dopplerRANSAC(BaseEstimator, RegressorMixin):
         Ntargets = radar_azimuth.shape[0]
 
         doppler_predicted = self.model.simulateRadarDoppler(self.param_vec_, \
-                                radar_azimuth, np.zeros((Ntargets,), dtype=float), \
-                                np.zeros((Ntargets,), dtype=float))
+                                radar_azimuth, np.zeros((Ntargets,), dtype=np.float32), \
+                                np.zeros((Ntargets,), dtype=np.float32))
 
         # rospy.loginfo("predict: doppler_predicted = \n" + str(doppler_predicted))
         return doppler_predicted
@@ -81,9 +86,20 @@ class dopplerRANSAC(BaseEstimator, RegressorMixin):
         numAzimuthBins = self.utils.getNumAzimuthBins(radar_azimuth)
         # rospy.loginfo("is_data_valid: numAzimuthBins = " + str(numAzimuthBins))
 
-        if numAzimuthBins > 1:
+        ## BUG: (2019-07-18) On the final iteration of RANSAC, the sample size
+        ## exceeds the value defined by the sampleSize parameter. The number of
+        ## data points in this larger sample is not consistent from one radar
+        ## scan to the next. This bug acually does not originate from here...
+
+        ## This function is NOT called prior to all Ninlier data points being
+        ## passed to the fit fcn prior to RANSAC exiting... why is this
+        ## behavior happening?
+
+        # if numAzimuthBins > self.model.sampleSize:
+        if numAzimuthBins == self.model.sampleSize :
             is_valid = True
         else:
             is_valid = False
 
+        rospy.loginfo("base_estimator.is_data_valid: is_valid = " + str(is_valid))
         return is_valid

@@ -1,0 +1,65 @@
+<!--
+  This file will launch...
+ -->
+
+<launch>
+  <!-- Goggles parameters -->
+  <arg name="launch_radar" default="false" doc="launch radar in addition to velocity estimator?"/>
+  <arg name="publish_inliers" default="true" doc="publish MLESAC inlier pointcloud?"/>
+
+  <!-- Which Odom system is being used - necessary for Octomap  -->
+  <arg name="vrpn" default="true" doc="using vrpn system?, (note: vrpn = !t265)"/>
+  <arg name="t265" default="false" doc="using t265 odom data?, (note: t265 = !vrpn)"/>
+
+  <!-- filter_rscan args -->
+  <arg name="input_pcl" default="/mmWaveDataHdl/RScanInliers"/>
+  <arg name="z_thres" default="0.5"/>
+  <arg name="intensity_thres" default="15"/>
+
+  <!-- launch Goggles node -->
+  <include file="$(find goggles)/launch/goggles.launch">
+    <arg name="launch_radar" value="$(arg launch_radar)"/>
+    <arg name="publish_inliers" value="$(arg publish_inliers)"/>
+    <arg name="range_thres" value="1"/>
+  </include>
+
+  <!-- launch RScanInliers filter node -->
+  <node pkg="goggles" type="rscan_octomap_filter.py" name="rscan_filter_node" output="screen">
+    <param name="input_pcl" value="$(arg input_pcl)"/>
+    <param name="z_thres" value="$(arg z_thres)"/>
+    <param name="intensity_thres" value="$(arg intensity_thres)"/>
+  </node>
+
+  <!-- launch octomap server -->
+  <include file="$(find octomap_server)/launch/octomap_mapping.launch">
+    <arg name="resolution" value="0.1"/>
+    <arg name="frame_id" value="world"/>
+    <arg name="max_range" value="10"/>
+    <arg name="input_pcl" value="/mmWaveDataHdl/RScanInliers/filtered"/>
+  </include>
+
+  <!-- launch world2odom transform node -->
+  <node if="$(arg vrpn)" pkg="radar_rig" type="world2odom_tf.py" name="vrpn_pose_tf" output="screen">
+    <param name="pose_topic" value="/vrpn_client_node/A01Radar/pose"/>
+    <param name="frame_id" value="world"/>
+    <param name="child_frame_id" value="base_radar_link"/>
+  </node>
+
+  <!-- launch world2odom transform node -->
+  <node if="$(arg t265)" pkg="radar_rig" type="world2odom_tf.py" name="vrpn_pose_tf" output="screen">
+    <param name="pose_topic" value="/camera/odom/sample"/>
+    <param name="frame_id" value="world"/>
+    <param name="child_frame_id" value="camera_pose_frame"/>
+  </node>
+
+  <!-- Launch Rviz with pre-defined configuration to view mmWave sensor detected object data -->
+  <node if="$(arg vrpn)" pkg="rviz" type="rviz" name="rviz" args="-d $(find ti_mmwave_rospkg)/rviz/radar_octomap_vrpn.rviz"/>
+
+  <!-- Launch Rviz with pre-defined configuration to view mmWave sensor detected object data -->
+  <node if="$(arg t265)" pkg="rviz" type="rviz" name="rviz" args="-d $(find ti_mmwave_rospkg)/rviz/radar_octomap_t265.rviz"/>
+  <node if="$(arg t265)" pkg="tf2_ros" type="static_transform_publisher" name="camera_radar_Static_tf" args="0 0 0 0 0 0 camera_pose_frame base_radar_link"/>
+
+  <!-- Static transform from map to base_radar_link for visualization of stand-alone mmWave sensor using Rviz -->
+  <!-- <node if="$(arg rviz)" pkg="tf2_ros" type="static_transform_publisher" name="map_radar_Static_tf" args="0 0 0 0 0 0 map world"/> -->
+
+</launch>

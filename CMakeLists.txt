@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(radar_velocity_estimator)
+project(goggles)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -104,8 +104,8 @@ catkin_python_setup()
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES radar_velocity_estimator
-  CATKIN_DEPENDS rospy sensor_msgs std_msgs
+#  LIBRARIES goggles
+#  CATKIN_DEPENDS rospy sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
 
@@ -117,12 +117,12 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
-#  ${catkin_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/radar_velocity_estimator.cpp
+#   src/${PROJECT_NAME}/goggles.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -133,7 +133,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/radar_velocity_estimator_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/goggles_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -190,7 +190,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_radar_velocity_estimator.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_goggles.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
