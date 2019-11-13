@@ -1,5 +1,7 @@
 # goggles
-A radar-based 3D linear velocity estimation ROS package
+*A radar-based 3D linear velocity estimation ROS package*
+
+The figure below compares the Goggles _radar-only_ odometry method to a newly commercially available [Intel T265 Tracking Camera](https://www.intelrealsense.com/tracking-camera-t265/) visual-inertial odometry system. The Goggles radar-only method in comparable and in some cases _outperforms_ the T265.
 
 <img src="radar_odom.png" width="934"/>
 
