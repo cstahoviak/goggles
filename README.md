@@ -15,5 +15,4 @@ linear velocity estimate derived from the inlier set.
 
 3. An Orthogonal Distance Regression ([ODR](http://scholar.colorado.edu/cgi/viewcontent.cgi?article=1311&context=csci_techreports))
 algortihm is seeded with the MLESAC linear velocity estimate and generates a final estimate of the body-frame linear
-velocity components. ODR "is the name given to the computational problem associated with finding the maximum likelihood
-estimators of parameters in measurement error models in the case of normally distributed errors."
+velocity components. Orthogonal Distance Regression _"is the name given to the computational problem associated with finding the maximum likelihood estimators of parameters in measurement error models in the case of normally distributed errors."_
