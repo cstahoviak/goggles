@@ -88,9 +88,9 @@ class OrthogonalDistanceRegression():
         while np.linalg.norm(s) > self.converge_thres:
 
             if p == 2:
-                G, V, M = self.getJacobian2D(data[:,1], delta, beta, weights, E)
+                G, V, M = self._getJacobian2D(data[:,1], delta, beta, weights, E)
             elif p == 3:
-                G, V, M = self.getJacobian3D(data[:,1:3], delta, beta, weights, E)
+                G, V, M = self._getJacobian3D(data[:,1:3], delta, beta, weights, E)
             else:
                 rospy.logerr("odr: initial guess must be a 2D or 3D vector")
 
@@ -128,14 +128,14 @@ class OrthogonalDistanceRegression():
 
         self.param_vec_ = beta
         if get_covar:
-            self.getCovariance( Gbar, D, eps, delta, weights )
+            self._getCovariance( Gbar, D, eps, delta, weights )
         else:
             self.covariance_ = float('nan')*np.ones((p,))
 
         return
 
 
-    def getJacobian2D(self, X, delta, beta, weights, E):
+    def _getJacobian2D(self, X, delta, beta, weights, E):
         """
         NOTE: We will use ODRPACK95 notation where the total Jacobian J has
         block components G, V and D:
@@ -166,7 +166,7 @@ class OrthogonalDistanceRegression():
 
         return G, V, M
 
-    def getJacobian3D(self, X, delta, beta, weights, E):
+    def _getJacobian3D(self, X, delta, beta, weights, E):
         """
         NOTE: We will use ODRPACK95 notation where the total Jacobian J has
         block components G, V and D:
@@ -223,16 +223,16 @@ class OrthogonalDistanceRegression():
 
         return G, V, M
 
-    def getWeights(self):
+    def _getWeights(self):
         pass
 
-    def getCovariance(self, Gbar, D, eps, delta, weights):
+    def _getCovariance(self, Gbar, D, eps, delta, weights):
         """
         Computes the (pxp) covariance of the model parameters beta according to
         the method described in "The Computation and Use of the Asymtotic
         Covariance Matrix for Measurement Error Models", Boggs & Rogers (1989).
         """
-
+        
         n = Gbar.shape[0]               # number of targets in the scan
         p = Gbar.shape[1]               # dimension of the model parameters
         m = int(delta.shape[0] / n)     # dimension of 'explanatory variable' vector
@@ -293,7 +293,7 @@ def test_odr(model):
 
     for i in range(mc_iter):
 
-        # print "MC iter: " + str(i)
+        print "MC iter: " + str(i)
 
         ## generate truth velocity vector
         velocity = (max_vel-min_vel)*np.random.random((base_estimator1.sample_size,)) + min_vel
