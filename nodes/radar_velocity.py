@@ -167,7 +167,7 @@ class VelocityEstimator():
             ## get MLESAC estimate + inlier set
             radar_data = np.column_stack((radar_doppler,radar_azimuth,radar_elevation))
             self.mlesac.mlesac(radar_data)
-            rospy.loginfo("RScan: %d\t Ninliers = %d", self.scan_count, self.mlesac.inliers_.shape[0])
+            # rospy.loginfo("RScan: %d\t Ninliers = %d", self.scan_count, self.mlesac.inliers_.shape[0])
 
             ## this data to be published on filtered ptcloud topic
             # intensity_inlier = radar_intensity[self.mlesac.inliers_]
