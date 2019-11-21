@@ -5,6 +5,8 @@ The figure below compares the Goggles _radar-only_ odometry method to a newly co
 
 <img src="radar_odom.png" width="934"/>
 
+## The Algorithm 
+
 Goggles estimates the 2D or 3D body-frame linear velocity vector of a sensor platfrom given input data from a single
 [TI mmWave Series](http://www.ti.com/sensors/mmwave/overview.html) radar (`/mmWaveDataHdl/RScan` topic). The velocity
 estimation scheme takes the following approach:
