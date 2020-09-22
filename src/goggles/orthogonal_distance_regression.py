@@ -21,7 +21,7 @@ from goggles.radar_doppler_model_3D import RadarDopplerModel3D
 from goggles.base_estimator_mlesac import dopplerMLESAC
 from goggles.mlesac import MLESAC
 
-class OrthogonalDistanceRegression():
+class OrthogonalDistanceRegression:
 
     def __init__(self, model, converge_thres=0.0005, max_iter=50, debug=False):
         self.model = model                      # radar Doppler model (2D or 3D)
